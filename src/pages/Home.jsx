@@ -4,7 +4,7 @@ import CategoryBar from "../components/CategoryBar";
 import ProductGrid from "../components/ProductGrid";
 import WhyKapiva from "../components/WhyKapiva";
 import Footer from "../components/Footer";
-import NewArrivals from "../components/newArrivals";
+import NewArrivals from "../components/NewArrivalsComponent";
 import LearnAyurveda from "../components/LearnAyurveda";
 import Dashboard from "./Dashboard";
 

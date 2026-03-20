@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { newArrivals } from "../data/newArrivals";
+import { newArrivals } from "../data/newArrival";
 
 const NewArrivals = () => {
   const [added, setAdded] = useState(null);
