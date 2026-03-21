@@ -1,40 +1,72 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
-const stats = [
-  { label: "Total Orders", value: "12", icon: "📦", path: "/dashboard/orders" },
-  { label: "Wishlist Items", value: "5", icon: "♡", path: "/dashboard/wishlist" },
-  { label: "Kapiva Coins", value: "240", icon: "🪙", path: "/dashboard/coins" },
-  { label: "Saved Addresses", value: "2", icon: "📍", path: "/dashboard/addresses" },
-];
-
-const recentOrders = [
-  { id: "#KAP10234", product: "Shilajit Gold Resin 40g", date: "15 Mar 2026", status: "Delivered", price: 1312 },
-  { id: "#KAP10198", product: "Testofuel Shilajit Whey Protein", date: "08 Mar 2026", status: "In Transit", price: 2899 },
-  { id: "#KAP10121", product: "Shilajit Gold Capsules 60 Caps", date: "01 Mar 2026", status: "Delivered", price: 1199 },
-];
+import { useAuth } from "../../context/AuthContext.jsx";
+import { getOrders } from "../../services/orderService.js";
+import { getCoins, getWishlist, getAddresses } from "../../services/userService.js";
 
 const statusColor = {
   Delivered: "bg-green-100 text-green-700",
   "In Transit": "bg-yellow-100 text-yellow-700",
+  Pending: "bg-blue-100 text-blue-700",
   Cancelled: "bg-red-100 text-red-600",
 };
 
 const Overview = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [orders, setOrders] = useState([]);
+  const [coins, setCoins] = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(0);
+  const [addressCount, setAddressCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        // All APIs called simultaneously - faster than one by one
+        const [ordersData, coinsData, wishlistData, addressData] = await Promise.all([
+          getOrders(),
+          getCoins(),
+          getWishlist(),
+          getAddresses(),
+        ]);
+        setOrders(ordersData);
+        setCoins(coinsData.coins);
+        setWishlistCount(wishlistData.length);
+        setAddressCount(addressData.length);
+      } catch (err) {
+        console.error("Overview fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAll();
+  }, []);
+
+  const stats = [
+    { label: "Total Orders",    value: orders.length, icon: "📦", path: "/dashboard/orders" },
+    { label: "Wishlist Items",  value: wishlistCount,  icon: "♡",  path: "/dashboard/wishlist" },
+    { label: "Kapiva Coins",    value: coins,           icon: "🪙", path: "/dashboard/coins" },
+    { label: "Saved Addresses", value: addressCount,    icon: "📍", path: "/dashboard/addresses" },
+  ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div>
-      {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-black text-gray-900 tracking-tight">
-          Welcome back, Vivek 👋
+          Welcome back, {user?.name?.split(" ")[0]} 👋
         </h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Here's what's happening with your account
-        </p>
+        <p className="text-sm text-gray-500 mt-1">Here's what's happening with your account</p>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {stats.map((stat) => (
           <div
@@ -51,13 +83,10 @@ const Overview = () => {
         ))}
       </div>
 
-      {/* Coins Banner */}
       <div className="bg-black rounded-2xl p-5 mb-8 flex items-center justify-between">
         <div>
-          <p className="text-white font-black text-lg">🪙 240 Kapiva Coins</p>
-          <p className="text-gray-400 text-xs mt-1">
-            Use coins to get extra discounts on your next order
-          </p>
+          <p className="text-white font-black text-lg">🪙 {coins} Kapiva Coins</p>
+          <p className="text-gray-400 text-xs mt-1">Use coins to get extra discounts on your next order</p>
         </div>
         <button
           onClick={() => navigate("/dashboard/coins")}
@@ -67,34 +96,36 @@ const Overview = () => {
         </button>
       </div>
 
-      {/* Recent Orders */}
       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <h2 className="font-bold text-gray-900">Recent Orders</h2>
-          <button
-            onClick={() => navigate("/dashboard/orders")}
-            className="text-xs text-green-600 font-semibold hover:underline"
-          >
+          <button onClick={() => navigate("/dashboard/orders")} className="text-xs text-green-600 font-semibold hover:underline">
             View all
           </button>
         </div>
-        <div className="divide-y divide-gray-100">
-          {recentOrders.map((order) => (
-            <div key={order.id} className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors">
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-green-600">{order.id}</p>
-                <p className="text-sm font-medium text-gray-800 truncate">{order.product}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{order.date}</p>
+        {orders.length === 0 ? (
+          <div className="text-center py-10 text-gray-400 text-sm">No orders yet</div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {orders.slice(0, 3).map((order) => (
+              <div key={order.id} className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-green-600">#KAP{order.id}</p>
+                  <p className="text-sm font-medium text-gray-800 truncate">{order.product_name}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {new Date(order.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                  </p>
+                </div>
+                <div className="flex flex-col items-end gap-1.5 ml-4 shrink-0">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusColor[order.status] || "bg-gray-100 text-gray-600"}`}>
+                    {order.status}
+                  </span>
+                  <span className="text-sm font-black text-gray-900">₹{order.price}</span>
+                </div>
               </div>
-              <div className="flex flex-col items-end gap-1.5 ml-4 shrink-0">
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusColor[order.status]}`}>
-                  {order.status}
-                </span>
-                <span className="text-sm font-black text-gray-900">₹{order.price}</span>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
