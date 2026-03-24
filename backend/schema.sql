@@ -128,3 +128,51 @@ ALTER TABLE users ADD COLUMN role ENUM('user','admin') DEFAULT 'user';
 
 -- Fix referral_code to be US+ID based (update existing)
 ALTER TABLE users ADD COLUMN user_code VARCHAR(20);
+
+
+ALTER TABLE users ADD COLUMN role ENUM('user', 'admin') DEFAULT 'user';
+DESC users;
+
+-- Wallet table
+CREATE TABLE IF NOT EXISTS wallet (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL UNIQUE,
+  balance DECIMAL(10,2) DEFAULT 0.00,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Wallet transactions history
+CREATE TABLE IF NOT EXISTS wallet_transactions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  admin_id INT NOT NULL,
+  type ENUM('credit', 'debit') NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  note VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Step 1: Table Admin
+CREATE TABLE IF NOT EXISTS admins (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100),
+  email VARCHAR(150) UNIQUE,
+  password VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO admins (name, email, password)
+VALUES ('Admin', 'admin@gmail.com', '112233');
+
+-- Wallet table
+CREATE TABLE IF NOT EXISTS wallet (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL UNIQUE,
+  balance DECIMAL(10,2) DEFAULT 0.00,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+SELECT * FROM admins;
+
+UPDATE admins SET password = '$2b$12$f2L6RpTck4ljdVV7xNS..e8dxVaD8tnX5vUp9SlLnD1tzNcYO6Jz2' WHERE email = 'admin@gmail.com';
