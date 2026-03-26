@@ -167,14 +167,13 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 
 // Auth pages
-import Login    from "../components/Login.jsx";
+import Login from "../components/Login.jsx";
 import Register from "../pages/Register.jsx";
 import Home from "../pages/Home.jsx";
 
-
 // Dashboard layout
 import DashboardLayout from "../pages/dash/layout/DashboardLayout.jsx";
-import DashboardHome   from "../pages/dash/pages/DashboardHome.jsx";
+import DashboardHome from "../pages/dash/pages/DashboardHome.jsx";
 
 // Profile
 import { EditProfile, ChangePassword } from "../pages/dash/pages/profile/ProfilePages.jsx";
@@ -194,36 +193,63 @@ import { Withdrawal, WithdrawalHistory } from "../pages/dash/pages/withdraw/With
 // Support
 import { Support } from "../pages/dash/pages/support/SupportPage.jsx";
 
-// Protected route
+// Protected route (user)
 import ProtectedRoute from "../components/ProtectedRoute.jsx";
+
+// Admin
+import AdminDashboard from "../pages/Admin/AdminDashboard.jsx";
+import AdminLogin from "../pages/Admin/AdminLogin.jsx";
+import UserTeam from "../pages/Admin/UserTeam.jsx";
+import UserWallet from "../pages/Admin/UserWallet.jsx";
+
+
+// 🔥 Admin Protected Route
+const AdminRoute = ({ children }) => {
+  const token = localStorage.getItem("admin_token");
+  return token ? children : <Navigate to="/admin/login" />;
+};
 
 const AppRoutes = () => {
   return (
     <Routes>
       {/* Public */}
-      {/* <Route path="/"         element={<Navigate to="/login" replace />} /> */}
-       <Route path="/" element={<Home />} />
-      <Route path="/login"    element={<Login />} />
+      <Route path="/" element={<Home />} />
+      <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Dashboard — protected */}
-      <Route path="/dash" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-        <Route index                     element={<DashboardHome />} />
-        <Route path="profile/edit"       element={<EditProfile />} />
-        <Route path="profile/password"   element={<ChangePassword />} />
-        <Route path="team/direct"        element={<DirectTeam />} />
-        <Route path="team/all"           element={<AllTeam />} />
-        <Route path="activation/activate"element={<ActivateId />} />
+      {/* User Dashboard — protected */}
+      <Route
+        path="/dash"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<DashboardHome />} />
+        <Route path="profile/edit" element={<EditProfile />} />
+        <Route path="profile/password" element={<ChangePassword />} />
+        <Route path="team/direct" element={<DirectTeam />} />
+        <Route path="team/all" element={<AllTeam />} />
+        <Route path="activation/activate" element={<ActivateId />} />
         <Route path="activation/history" element={<ActivationHistory />} />
-        <Route path="income/all"         element={<AllIncome />} />
-        <Route path="income/referral"    element={<ReferralIncome />} />
-        <Route path="withdraw/request"   element={<Withdrawal />} />
-        <Route path="withdraw/history"   element={<WithdrawalHistory />} />
-        <Route path="support"            element={<Support />} />
+        <Route path="income/all" element={<AllIncome />} />
+        <Route path="income/referral" element={<ReferralIncome />} />
+        <Route path="withdraw/request" element={<Withdrawal />} />
+        <Route path="withdraw/history" element={<WithdrawalHistory />} />
+        <Route path="support" element={<Support />} />
       </Route>
+
+     {/* Admin Routes */}
+       <Route path="/admin/login" element={<AdminLogin />} />
+       <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+       <Route path="/admin/users/:id/team" element={<AdminRoute><UserTeam /></AdminRoute>} />
+       <Route path="/admin/users/:id/wallet" element={<AdminRoute><UserWallet /></AdminRoute>} />
+
+      {/* Optional fallback */}
+      {/* <Route path="*" element={<Navigate to="/" />} /> */}
     </Routes>
   );
 };
-
 
 export default AppRoutes;
