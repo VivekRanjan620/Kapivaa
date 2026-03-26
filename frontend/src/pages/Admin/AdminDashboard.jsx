@@ -28,10 +28,15 @@ const AdminDashboard = () => {
     }
   }, [page, search]);
 
-  useEffect(() => {
-    const timer = setTimeout(fetchUsers, 400);
-    return () => clearTimeout(timer); // Debounce cleanup
-  }, [fetchUsers]);
+useEffect(() => {
+  const token = localStorage.getItem("admin_token");
+  if (!token) {
+    navigate("/admin/login");
+    return;
+  }
+  const timer = setTimeout(fetchUsers, 400);
+  return () => clearTimeout(timer);
+}, [fetchUsers]);
 
   // Admin login as user (impersonation)
   const handleImpersonate = async (userId, userName) => {
@@ -44,7 +49,7 @@ const AdminDashboard = () => {
       localStorage.setItem("kapiva_user", JSON.stringify(data.user));
       localStorage.setItem("impersonating", "true");
       localStorage.setItem("admin_token_backup", localStorage.getItem("admin_token"));
-      navigate("/dashboard");
+      navigate("/dash");
     } catch (err) {
       alert(err.response?.data?.message || "Impersonation failed.");
     } finally {
